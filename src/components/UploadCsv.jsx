@@ -8,7 +8,8 @@ const UploadCsv = () => {
   const [csvData, setCsvData] = useState([]);
   const [fileName, SetFileName] = useState("");
   const [product, setProductsData] = useState([]);
-  const [loading,setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const tagRefs = useRef([]);
 
   // Fetch MRP data from product API
@@ -58,41 +59,52 @@ const UploadCsv = () => {
   // Generate PDF of all tag labels
   const handleDownload = async () => {
     setLoading(true);
-   try {
-     const pdf = new jsPDF({
-       orientation: "landscape",
-       unit: "mm",
-       format: [100, 50],
-     });
- 
-     for (let i = 0; i < tagRefs.current.length; i++) {
-       const tag = tagRefs.current[i];
-       if (tag) {
-         const canvas = await html2canvas(tag);
-         const imgData = canvas.toDataURL("image/png");
-         if (i !== 0) pdf.addPage();
-         pdf.addImage(imgData, "PNG", 0, 0, 100, 50);
-       }
-     }
- 
-     pdf.save("tag-labels.pdf");
-   } catch (error) {
-      alert("Faild to download Tag.")
-   }finally{
-    setLoading(false);
-   }
+    setProgress(0);
+    try {
+      const pdf = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: [100, 50],
+      });
+
+      const totalTags = tagRefs.current.length;
+      
+      for (let i = 0; i < totalTags; i++) {
+        const tag = tagRefs.current[i];
+        if (tag) {
+          const canvas = await html2canvas(tag);
+          const imgData = canvas.toDataURL("image/png");
+          if (i !== 0) pdf.addPage();
+          pdf.addImage(imgData, "PNG", 0, 0, 100, 50);
+          
+          // Update progress
+          const currentProgress = Math.floor(((i + 1) / totalTags) * 100);
+          setProgress(currentProgress);
+        }
+      }
+
+      pdf.save("tag-labels.pdf");
+    } catch (error) {
+      alert("Failed to download Tag.");
+    } finally {
+      setLoading(false);
+      setProgress(0);
+    }
   };
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-        
       {/* Upload box */}
       <div className="mb-6 bg-white p-4 rounded-lg shadow relative">
         <h2 className="text-2xl font-semibold mb-2">
           Upload <span className="text-blue-600">Sorted Cutting List</span>
         </h2>
         <p className="text-sm text-gray-500 mb-3 ">CSV files only</p>
-        <div className="mt-6"> <a href="tag_sample.csv" className="bg-blue-400 text-white hover:bg-blue-500 duration-75 absolute top-0  right-0 py-3 rounded-xl cursor-pointer px-4">Download Sample File</a> </div>
+        <div className="mt-6"> 
+          <a href="tag_sample.csv" className="bg-blue-400 text-white hover:bg-blue-500 duration-75 absolute top-0 right-0 py-3 rounded-xl cursor-pointer px-4">
+            Download Sample File
+          </a> 
+        </div>
 
         <label className="w-full flex items-center justify-center h-40 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer">
           <div className="text-center">
@@ -105,10 +117,8 @@ const UploadCsv = () => {
             onChange={handleFileUpload}
             className="hidden"
           />
-          
         </label>
 
-        
         {fileName && (
           <div className="mt-4 text-sm text-green-700 font-medium">
             ✅ {fileName} uploaded successfully.
@@ -116,14 +126,26 @@ const UploadCsv = () => {
         )}
       </div>
 
-      {/* Download button */}
+      {/* Download button and progress bar */}
       {csvData.length > 0 && (
-        <div className="flex justify-end mb-4">
+        <div className="flex flex-col items-end mb-4 gap-2">
+          {loading && (
+            <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div 
+                className="bg-blue-600 h-2.5 rounded-full" 
+                style={{ width: `${progress}%` }}
+              ></div>
+              <div className="text-sm text-gray-600 mt-1 text-right">
+                Generating: {progress}% completed
+              </div>
+            </div>
+          )}
           <button
             onClick={handleDownload}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md shadow"
+            disabled={loading}
+            className={`${loading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'} text-white px-6 py-2 rounded-md shadow`}
           >
-          {loading?"Generation...":"Download Tag"}   
+            {loading ? `Generating... (${progress}%)` : "Download Tag"}   
           </button>
         </div>
       )}
@@ -160,16 +182,16 @@ const UploadCsv = () => {
               <p>MRP: ₹{mrp} (Incl. of all taxes)</p>
               <p>Net Qty: 1 | Unit: 1 Pcs</p>
               <p>
-                MFG & MKT BY: Qurvii, 2nd Floor, B-149 Sector-6, <br/> Noida, UP,
+                MFG & MKT BY: Qurvii, 2nd Floor, B-149 <br/>Sector-6, Noida, UP,
                 201301
               </p>
               <p>Contact: support@qurvii.com</p>
-              <p className="absolute bottom-4 right-2">
+              <p className="absolute bottom-13 right-8">
                 Order Id: {row.order_id}
               </p>
-              <div className="absolute top-2 right-2">
+              <div className="absolute top-6 right-8">
                 <QRCodeSVG value={row.order_id} size={80} level="H" />
-              </div>
+              </div> 
             </div>
           );
         })}
