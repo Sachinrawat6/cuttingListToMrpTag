@@ -40,6 +40,7 @@ const UploadCsv = () => {
           const styleNumber = row["Style Number"] || "";
           const size = row["Size"] || "";
           const color = row["Color"] || "";
+          
           const order_id = row["(Do not touch) Order Id"] || "";
           return {
             styleNumber,
@@ -154,8 +155,8 @@ const UploadCsv = () => {
       <div className="grid grid-cols-1 gap-4 overflow-y-auto max-h-[600px]">
         {csvData.map((row, index) => {
           const ref = (el) => (tagRefs.current[index] = el);
-          const mrp =
-            product.find((p) => p.style_code === row.styleNumber)?.mrp || 5323;
+          const matched =
+            product.find((p) => p.style_code === Number(row.styleNumber));
           return (
             <div
               ref={ref}
@@ -168,28 +169,29 @@ const UploadCsv = () => {
                 color: "#000",
                 fontSize: "12px",
                 fontFamily: "sans-serif",
-                border: "1px solid #ccc",
+                // border: "1px solid #ccc",
                 position: "relative",
               }}
               className="font-bold"
             >
+              <p className="w-70">Product : {matched?.style_name || "Qurvii Product"} </p>
               <p>
                 Brand: Qurvii | SKU: {row.styleNumber}-{row.color}-{row.size}
               </p>
               <p className="capitalize">
                 Color: {row.color} | Size: {row.size}
               </p>
-              <p>MRP: ₹{mrp} (Incl. of all taxes)</p>
+              <p>MRP: ₹{matched?.mrp || "NA"} (Incl. of all taxes)</p>
               <p>Net Qty: 1 | Unit: 1 Pcs</p>
               <p>
                 MFG & MKT BY: Qurvii, 2nd Floor, B-149 <br/>Sector-6, Noida, UP,
                 201301
               </p>
               <p>Contact: support@qurvii.com</p>
-              <p className="absolute bottom-13 right-8">
+              <p className="absolute bottom-11 right-8">
                 Order Id: {row.order_id}
               </p>
-              <div className="absolute top-6 right-8">
+              <div className="absolute top-10 right-8">
                 <QRCodeSVG value={row.order_id} size={80} level="H" />
               </div> 
             </div>
