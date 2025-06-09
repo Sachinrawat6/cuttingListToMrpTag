@@ -28,8 +28,8 @@ const UploadCsv = () => {
   // Handle CSV upload
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
-    if (!file) return;
-
+    if (!file) return
+    
     SetFileName(file.name);
 
     Papa.parse(file, {
@@ -40,13 +40,14 @@ const UploadCsv = () => {
           const styleNumber = row["Style Number"] || "";
           const size = row["Size"] || "";
           const color = row["Color"] || "";
-          
+          const productName = row["Product Name"] || "";
           const order_id = row["(Do not touch) Order Id"] || "";
           return {
             styleNumber,
             size,
             color,
             order_id,
+            productName
           };
         });
         setCsvData(parsedData);
@@ -169,12 +170,13 @@ const UploadCsv = () => {
                 color: "#000",
                 fontSize: "12px",
                 fontFamily: "sans-serif",
-                // border: "1px solid #ccc",
+                border: "1px solid #f2f2f2",
+                borderRadius:"1rem",
                 position: "relative",
               }}
               className="font-bold"
             >
-              <p className="w-70">Product : {matched?.style_name || "Qurvii Product"} </p>
+              <p className="w-70">Product : {row.productName || matched?.style_name || "Qurvii Product"} </p>
               <p>
                 Brand: Qurvii | SKU: {row.styleNumber}-{row.color}-{row.size}
               </p>
